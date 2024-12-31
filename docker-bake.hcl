@@ -58,7 +58,7 @@ target "clash" {
     GOSU_VERSION  = "${GOSU_VERSION}"
   }
   tags = [
-    "docker.io/centralx/clash:latest",
-    "docker.io/centralx/clash:${IMAGE_VERSION}"
+    "docker.io/ronghuaxueleng/clash:latest",
+    "docker.io/ronghuaxueleng/clash:${IMAGE_VERSION}"
   ]
 }
