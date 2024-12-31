@@ -35,7 +35,7 @@ jobs:
         uses: docker/bake-action@v5
         with:
           targets: clash
-          workdir: ./clash
+          workdir: ./
           push: true
   #################################################################
   # Test Clash
