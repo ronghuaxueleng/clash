@@ -1,22 +1,20 @@
 version: "3"
 services:
   clash:
-    image: 9527tech/clash
+    image: crpi-cnazxqmg4avmg4fq.cn-beijing.personal.cr.aliyuncs.com/ronghuaxueleng/clash:latest
     container_name: clash
     ports:
       - 7890:7890 # mixed-port
       - 9090:9090 # restful api port
     environment:
-      - CONF_URL=https://test.com
+      - CONF_URL=https://proxy.v2gh.com/https://raw.githubusercontent.com/ronghuaxueleng/get_v2/refs/heads/main/pub/NoMoreWalls.yaml
       - EXTERNAL_BIND=0.0.0.0
       - EXTERNAL_PORT=9090
       - TZ=Aisa/Shanghai
-      - DEFAULT_BACKEND=http://192.168.1.1:9090
+      - DEFAULT_BACKEND=http://192.168.10.13:9090
     volumes: []
     depends_on: []
-    restart: unless-stopped
-    networks:
-      - network_bus
+    restart: always
     logging:
       driver: json-file
       options:
@@ -26,9 +24,6 @@ services:
       - homepage.group=Tool
       - homepage.name=Clash
       - homepage.icon=clash.png
-      - homepage.href=http://192.168.1.1:9090
+      - homepage.href=http://192.168.10.13:9090
       - homepage.description=Clash Dashboard
-networks:
-  network_bus:
-    external: true
 
