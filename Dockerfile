@@ -1,7 +1,7 @@
 FROM alpine:3.20
 
-ARG CLASH_VERSION="v1.18.7"
-ARG METACUBEXD_VERSION="v1.143.5"
+ARG CLASH_VERSION="v1.19.1"
+ARG METACUBEXD_VERSION="v1.176.1"
 
 
 ADD https://mirror.ghproxy.com/https://github.com/MetaCubeX/mihomo/releases/download/$CLASH_VERSION/mihomo-linux-amd64-compatible-$CLASH_VERSION.gz /opt/clash-linux-amd64-$CLASH_VERSION.gz
