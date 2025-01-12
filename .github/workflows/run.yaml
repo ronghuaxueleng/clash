@@ -29,12 +29,12 @@ jobs:
         name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
       -
         name: Build and push
         uses: docker/build-push-action@v5
         with:
           push: true
           # 使用从上一个步骤传递的版本号作为镜像的标签，并添加 latest 标签
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/clash:${{ steps.extract_version.outputs.clash_version }},${{ secrets.DOCKERHUB_USERNAME }}/clash:latest
+          tags: ${{ secrets.DOCKER_USERNAME }}/clash:${{ steps.extract_version.outputs.clash_version }},${{ secrets.DOCKER_USERNAME }}/clash:latest
