@@ -1,57 +1,44 @@
-# Clash
-## 概述
-&emsp;&emsp;本镜像封装了 Clash 及 Clash Dashboard。部署本项目后，可以直接通过网页管理代理。
+# 根据订阅地址自动更新与运行的 Clash 镜像
 
-## 镜像标准
-&emsp;&emsp;本镜像遵守以下构建标准：
+## 使用方法
 
-- 非 root 容器: 镜像在构建过程中已创建用户 `runner`（uid 1000）和用户组 `runner`（gid 1000），并将使用该用户运行程序。使用非 root 运行程序可以为容器添加一层额外的安全保障；
-- 时区: 镜像支持设置时区，默认为 `Asia/Shanghai`。使用环境变量 `TZ` 修改时区。
-- 字符集: 镜像字符集为 `UTF-8`。
+1. **修改订阅地址**：将 `CONF_URL` 环境变量设置为您的 Clash 订阅地址。
+2. **配置环境变量**：根据您的需求配置其他环境变量。
+3. **启动服务**：运行 `docker-compose up` 命令来启动 Clash 服务。
 
-## 使用说明
-### 部署
-&emsp;&emsp;准备好配置文件 `config.yaml`，然后运行以下命令，即可部署 clash。
+## docker-compose.yml 示例
 
-```bash
-$ docker run --rm 
-  --name=clash \
-  -p 80:80 \
-  -p 7890:7890 \
-  -v ./config.yaml:/home/runner/.config/clash/config.yaml \
-  centralx/clash:1.18.0
+```yaml
+version: '3.8'
+services:
+  clash:
+    image: 9527tech/clash:latest  # 确保使用最新版本的镜像
+    container_name: clash
+    ports:
+      - "7890:7890" # 用于代理的端口 mixed-port
+      - "9090:9090" # RESTful API 端口
+    environment:
+      - CONF_URL=https://your-subscription-url  # 替换为您的订阅地址
+      - EXTERNAL_BIND=0.0.0.0
+      - EXTERNAL_PORT=9090
+      - TZ=Asia/Shanghai
+      - DEFAULT_BACKEND=http://your-default-backend-ip:9090 # 端口同 EXTERNAL_PORT
+    restart: unless-stopped
 ```
 
-&emsp;&emsp;部署后，通过 80 端口访问 Clash Dashboard。
+### 注意事项
 
-### 使用代理
-&emsp;&emsp;如果 Linux 需要使用代理，可以使用以下命令设置:
+- 确保将 `https://your-subscription-url` 替换为您的实际订阅地址。
+- `DEFAULT_BACKEND` 用于 UI 中的默认后端地址，如果您不需要修改 UI 中的默认后端，可以忽略此环境变量。
+- 要使用 Clash 的 RESTful API，请确保您的其他软件配置了正确的端口（本例中为 `9090`）。
 
-```bash
-export no_proxy=localhost,127.0.0.1
-export http_proxy=http://<host>:7890
-export https_proxy=http://<host>:7890
-export all_proxy=socks://<host>:7890
+## 访问管理 UI
+
+要使用 Clash 自带的管理 UI，请访问以下地址：
+
+```
+http://<您的服务器IP>:9090/ui
 ```
 
-&emsp;&emsp;也可以在 `~/.bash_profile` 定义 `proxy_on` 和 `proxy_off` 函数，用于快速开启和关闭代理:
+请将 `<您的服务器IP>` 替换为您服务器的实际 IP 地址。
 
-```bash
-function proxy_off() {
-    unset no_proxy
-    unset http_proxy
-    unset https_proxy
-    unset all_proxy
-    echo -e "Proxy Disabled"
-}
-
-function proxy_on() {
-    # CIDR 网段表示法只在部份受支持的程序里起效
-    # 如果不起效，那么需要直接设置具体的 IP 地址
-    export no_proxy=localhost,127.0.0.1,127.0.0.0/8,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16
-    export http_proxy=http://<host>:7890
-    export https_proxy=http://<host>:7890
-    export all_proxy=socks://<host>:7890
-    echo -e "Proxy Enabled"
-}
-```

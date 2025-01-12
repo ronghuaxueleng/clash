@@ -1,69 +1,40 @@
-########################################################
-# Stage 1
-# 获取构建需要用到的安装包
-########################################################
-FROM centralx/busybox:latest as builder
-ARG TARGETARCH
-ARG GOSU_VERSION
+FROM alpine:3.20
 
-WORKDIR /workspace
+ARG CLASH_VERSION="v1.18.7"
+ARG METACUBEXD_VERSION="v1.143.5"
 
-# 下载 gosu
-ADD "https://github.com/tianon/gosu/releases/download/${GOSU_VERSION}/gosu-${TARGETARCH}" ./gosu
-# 复制 clash 需要的包
-ADD ./stage/target/amd64/clash          ./amd64/clash
-ADD ./stage/target/arm64/clash          ./arm64/clash
-ADD ./stage/target/Country.mmdb         ./Country.mmdb
-ADD ./stage/target/html.tar.gz          ./
-ADD ./stage/target/entrypoint.sh        ./entrypoint.sh
-ADD ./stage/target/nginx/nginx.conf     ./nginx/nginx.conf
-ADD ./stage/target/nginx/default.conf   ./nginx/default.conf
 
-########################################################
-# Stage 2
-# 只复制指定架构的包
-# 设置相关环境变量
-########################################################
-FROM image
-ARG TARGETARCH
+ADD https://mirror.ghproxy.com/https://github.com/MetaCubeX/mihomo/releases/download/$CLASH_VERSION/mihomo-linux-amd64-compatible-$CLASH_VERSION.gz /opt/clash-linux-amd64-$CLASH_VERSION.gz
+ADD https://fastly.jsdelivr.net/gh/Dreamacro/maxmind-geoip@release/Country.mmdb /root/conf/Country.mmdb
+ADD https://mirror.ghproxy.com/https://github.com/MetaCubeX/metacubexd/releases/download/$METACUBEXD_VERSION/compressed-dist.tgz /root/compressed-dist.tgz
+COPY ./scripts/run.bash /bin/run
+COPY ./scripts/dl-clash-conf.bash /bin/dl-clash-conf
+COPY ./scripts/update-clash-conf.bash /bin/update-clash-conf
+COPY ./scripts/update-yaml.rb  /bin/update-yaml.rb
 
-# 时区和字符集
-ENV TZ=Asia/Shanghai
-ENV LANG C.UTF-8
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends tzdata ca-certificates nginx curl telnet iputils-ping nano vim && \
-    rm -rf /var/lib/apt/lists/*
+# 配置文件地址
+ENV CONF_URL=https://proxy.v2gh.com/https://raw.githubusercontent.com/ronghuaxueleng/get_v2/refs/heads/main/pub/NoMoreWalls.yaml
+# 配置文件更新频率
+ENV UPDATE_INTERVAL=86400
+# RESTful API 地址, 可为空
+ENV EXTERNAL_BIND="127.0.0.1"
+ENV EXTERNAL_PORT="9090"
+# RESTful API 鉴权
+ENV EXTERNAL_SECRET=""
 
-# 添加 runner 分组、runner 用户
-# groupadd
-# -r: 创建系统组
-# -g: 指定用户组 GID
-# useradd
-# -r: 创建系统用户
-# -m, --create-home: 创建用户主目录，默认是 /home/<user>
-# -g: 指定用户所属组
-# -u: 指定用户 UID
-RUN groupadd -r -g 1000 runner && useradd -r -m -g runner -u 1000 runner
+RUN apk -U --no-cache add wget \
+    curl \
+    bash \
+    ruby \
+    && gzip -d /opt/clash-linux-amd64-$CLASH_VERSION.gz \
+    && chmod +x /opt/clash-linux-amd64-$CLASH_VERSION \
+    && ln -s /opt/clash-linux-amd64-$CLASH_VERSION /bin/clash \
+    && chmod +x /bin/run \
+    && chmod +x /bin/update-clash-conf \
+    && chmod +x /bin/dl-clash-conf \
+    && chmod +x /bin/update-yaml.rb \
+    && mkdir /root/ui \
+    && tar xf /root/compressed-dist.tgz -C /root/ui \
+    && rm /root/compressed-dist.tgz
 
-# 工作目录
-WORKDIR /workspace
-
-# 添加脚本，并授予可执行权限
-COPY --from=builder /workspace/Country.mmdb          /home/runner/.config/clash/Country.mmdb
-COPY --from=builder "/workspace/$TARGETARCH/clash"   /usr/local/bin/clash
-COPY --from=builder /workspace/html                  /workspace/html
-COPY --from=builder /workspace/entrypoint.sh         /usr/local/bin/entrypoint.sh
-COPY --from=builder /workspace/gosu                  /usr/local/bin/gosu
-RUN chmod +x /usr/local/bin/*
-
-# 添加 nginx 配置
-COPY --from=builder /workspace/nginx/nginx.conf      /etc/nginx/nginx.conf
-COPY --from=builder /workspace/nginx/default.conf    /etc/nginx/conf.d/default.conf
-
-# 80: Clash 管理端口
-# 7890: 流量代理端口
-EXPOSE 80/tcp
-EXPOSE 7890/tcp
-
-# 启动脚本
-ENTRYPOINT ["entrypoint.sh"]
+ENTRYPOINT ["run"]
