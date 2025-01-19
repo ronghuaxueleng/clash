@@ -5,7 +5,7 @@ ARG METACUBEXD_VERSION="v1.176.1"
 
 
 ADD https://mirror.ghproxy.com/https://github.com/MetaCubeX/mihomo/releases/download/$CLASH_VERSION/mihomo-linux-amd64-compatible-$CLASH_VERSION.gz /opt/clash-linux-amd64-$CLASH_VERSION.gz
-ADD https://fastly.jsdelivr.net/gh/Dreamacro/maxmind-geoip@release/Country.mmdb /root/conf/Country.mmdb
+ADD https://proxy.v2gh.com/https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country.mmdb /root/conf/Country.mmdb
 ADD https://mirror.ghproxy.com/https://github.com/MetaCubeX/metacubexd/releases/download/$METACUBEXD_VERSION/compressed-dist.tgz /root/compressed-dist.tgz
 COPY ./scripts/run.bash /bin/run
 COPY ./scripts/dl-clash-conf.bash /bin/dl-clash-conf
